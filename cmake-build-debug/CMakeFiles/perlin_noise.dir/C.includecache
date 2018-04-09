@@ -6,6 +6,8 @@
 
 #IncludeRegexTransform: 
 
+C:/Users/robso/CLionProjects/perlin_noise/functions.h
+
 C:/Users/robso/CLionProjects/perlin_noise/main.c
 stdlib.h
 -
@@ -13,4 +15,6 @@ stdio.h
 -
 math.h
 -
+functions.h
+C:/Users/robso/CLionProjects/perlin_noise/functions.h
 

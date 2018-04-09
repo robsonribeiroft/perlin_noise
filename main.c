@@ -1,10 +1,13 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<math.h>
+#include "functions.h"
 #define true 1
 #define false 0
 
 int p[512];
+int *width, *height, *maxValue;
+
 
 double fade(double t) {
     /*
@@ -18,37 +21,43 @@ double fade(double t) {
 }
 
 double lerp(double t, double a, double b) {
-    return a + t * (b - a);
+    return ((1 - t) * a + t * b);
+    //return a + t * (b - a);
 }
-double grad(int hash, double x, double y, double z) {
-    int h = hash & 15;          // Take the hashed value and take the first 4 bits of it (15 == 0b1111)
-    double u = h<8 ? x : y;     // If the most significant bit (MSB) of the hash is 0 then set u = x.  Otherwise y.
-    double v;
-    v = h<4 ? y : h==12 || h==14 ? x : z; // If the first and second significant bits are 0 set v = y
-    return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
+double grad(int hash, double x, double y) {
+    switch(hash & 3){
+        case 0: return x + y;
+        case 1: return -x + y;
+        case 2: return x - y;
+        case 3: return -x - y;
+        default: return 0;
+    }
 }
 
-double noise(double x, double y, double z) {
-    int X = (int)floor(x) & 255,
-            Y = (int)floor(y) & 255,
-            Z = (int)floor(z) & 255;
+double noise(double x, double y) {
+    int xi = (int) floor(x) & 255;
+    int yi = (int) floor(y) & 255;
+    int g1 = p[p[xi] + yi];
+    int g2 = p[p[xi + 1] + yi];
+    int g3 = p[p[xi] + yi + 1];
+    int g4 = p[p[xi + 1] + yi + 1];
 
-    x -= floor(x);
-    y -= floor(y);
-    z -= floor(z);
-    double u = fade(x),
-            v = fade(y),
-            w = fade(z);
-    int A = p[X]+Y, AA = p[A]+Z, AB = p[A+1]+Z, B = p[X+1]+Y, BA = p[B]+Z, BB = p[B+1]+Z;
+    double xf = x - floor(x);
+    double yf = y - floor(y);
 
-    return lerp(w, lerp(v, lerp(u, grad(p[AA], x  , y  , z),
-                                grad(p[BA], x-1, y  , z )),
-                        lerp(u, grad(p[AB], x  , y-1, z ),
-                             grad(p[BB], x-1, y-1, z ))),
-                lerp(v, lerp(u, grad(p[AA+1], x  , y  , z-1 ),
-                             grad(p[BA+1], x-1, y  , z-1 )),
-                     lerp(u, grad(p[AB+1], x, y-1, z-1 ),
-                          grad(p[BB+1], x-1, y-1, z-1 ))));
+    double d1 = grad(g1, xf, yf);
+    double d2 = grad(g2, xf - 1, yf);
+    double d3 = grad(g3, xf, yf - 1);
+    double d4 = grad(g4, xf - 1, yf - 1);
+
+    double u = fade(xf);
+    double v = fade(yf);
+
+    double x1Inter = lerp(u, d1, d2);
+    double x2Inter = lerp(u, d3, d4);
+    double yInter = lerp(v, x1Inter, x2Inter);
+
+    return yInter;
 }
 
 void loadPermutation(char* fileName){
@@ -65,7 +74,12 @@ void loadPermutation(char* fileName){
 
 int main(){
     double x=3.14, y=42, z=7;
-    float i = 0.0, j=0.0, k=0;
+    float i = 0.14, j=5.19, k=0;
+    printf("Noise for (%.3f, %.3f, %.3f) is %.17lf\n",i,j,k,noise(i,j));
+
+    //AbreArquivoPgm(width, height, maxValue);
+    //printf("%p %p %p", width, height, maxValue);
+    /*
     loadPermutation("C:\\Users\\robso\\CLionProjects\\perlin_noise\\data.txt");
 
     do{
@@ -76,6 +90,7 @@ int main(){
         j+=1.0;
         k+=1.0;
     }while (i < 256 && j<256 && k<256);
+    */
 
     return 0;
 }
