@@ -1,28 +1,30 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<math.h>
-#include "functions.h"
-#define true 1
-#define false 0
 
+/*
+ * Tabela de pesquisa de hash, conforme definido por Ken Perlin.
+ * Esta é uma matriz aleatoriamente organizada de todos os números de 0 a 255 inclusive.
+ * */
 int p[512];
-int *width, *height, *maxValue;
 
 
+/*
+ * Função de atenuação conforme definido por Ken Perlin.
+ * Isso facilita os valores de coordenadas, de modo que facilitem os valores integrais.
+ * Isso acaba suavizando a saída final.
+ * */
 double fade(double t) {
-    /*
-     *
-     Fade function as defined by Ken Perlin.  This eases coordinate values
-     so that they will ease towards integral values.  This ends up smoothing
-     the final output.
-     6t^5 - 15t^4 + 10t^3
-    */
     return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
+/*
+ *  Função para interporlação de valores.
+ *  Utilizando a interpolação é possível obter valores diferentes, mas próximos aos valores originais,
+ *  assim, não havera um salto sobre os tons de cinza.
+ * */
 double lerp(double t, double a, double b) {
     return ((1 - t) * a + t * b);
-    //return a + t * (b - a);
 }
 double grad(int hash, double x, double y) {
     switch(hash & 3){
@@ -56,7 +58,6 @@ double noise(double x, double y) {
     double x1Inter = lerp(u, d1, d2);
     double x2Inter = lerp(u, d3, d4);
     double yInter = lerp(v, x1Inter, x2Inter);
-
     return yInter;
 }
 
@@ -73,24 +74,28 @@ void loadPermutation(char* fileName){
 
 
 int main(){
-    double x=3.14, y=42, z=7;
-    float i = 0.14, j=5.19, k=0;
-    printf("Noise for (%.3f, %.3f, %.3f) is %.17lf\n",i,j,k,noise(i,j));
 
-    //AbreArquivoPgm(width, height, maxValue);
-    //printf("%p %p %p", width, height, maxValue);
-    /*
+    int width, height, holder;
+
+    puts("Qual o tamanho da img que deseja criar(largura altura)?");
+    scanf("%d %d", &width, &height);
+
     loadPermutation("C:\\Users\\robso\\CLionProjects\\perlin_noise\\data.txt");
 
-    do{
-        //printf("Enter the values to x, y aned z(x y z):\n");
-        //scanf("%lf %lf %lf", &x, &y, &z);
-        printf("Noise for (%.3f, %.3f, %.3f) is %.17lf\n",i,j,k,noise(i,j,k));
-        i+=0.001;
-        j+=1.0;
-        k+=1.0;
-    }while (i < 256 && j<256 && k<256);
-    */
+    FILE *file = fopen("perlin.pgm", "w");
+    if (file == NULL){
+        puts("Erro na criação do arquivo");
+    } else{
+        fprintf(file, "P2");
+        fprintf(file,"%d %d 255\n", height, width) ;
+        for (int i = 0; i < height; ++i) {
+            for (int j = 0; j < width; ++j) {
+                holder = (int) (noise((double)i/255, (double)j/255) * 255);
+                fprintf(file, "%d ", holder);
+            }
+        }
+    }
+    fclose(file);
 
     return 0;
 }
